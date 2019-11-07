@@ -4,6 +4,7 @@ import com.ecommerce.microcommerce.dao.ProductDao;
 import com.ecommerce.microcommerce.model.Product;
 import com.ecommerce.microcommerce.web.exceptions.ProduitGratuitException;
 import com.ecommerce.microcommerce.web.exceptions.ProduitIntrouvableException;
+import com.fasterxml.jackson.core.io.JsonEOFException;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
@@ -17,7 +18,9 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @Api( description="API pour es opérations CRUD sur les produits.")
@@ -104,14 +107,19 @@ public class ProductController {
         return productDao.chercherUnProduitCher(400);
     }
 
-    @GetMapping(value = "Admin/produits/{id}")
-    public int calculerMargeProduit(@PathVariable int id){
-        Product product = productDao.findById(id);
-        if(product==null) throw new ProduitIntrouvableException("Le produit avec l'id " + id + " est INTROUVABLE.");
+    @GetMapping(value = "Admin/produits")
+    public Map<String, Integer> calculerMargeProduit()throws JsonEOFException {
+        List<Product> allProduct = productDao.findAll();
 
-        int margeProduit=product.getPrix()-product.getPrixAchat();
 
-        return margeProduit;
+        Map<String, Integer> margeProduits = new HashMap<String, Integer>();
+
+        allProduct.forEach(produit -> {
+            int marge = produit.getPrix()-produit.getPrixAchat();
+            margeProduits.put(produit.toString(), marge);
+        });
+
+        return margeProduits;
 
     }
 
